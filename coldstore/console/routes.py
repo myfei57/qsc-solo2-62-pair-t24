@@ -127,6 +127,17 @@ def route_table() -> list[Route]:
         Route("GET", "/export/telemetry", "telemetry counters as CSV", "export_telemetry"),
         Route("POST", "/cycle", "run a full control cycle", "cycle"),
         Route("POST", "/simulate", "run deterministic simulation ticks", "simulate"),
+        Route("POST", "/runs", "create a resumable simulation run", "runs_create"),
+        Route("GET", "/runs", "list simulation runs", "runs_list"),
+        Route("GET", "/runs/show", "run detail with recent checkpoints", "runs_show"),
+        Route("GET", "/runs/checkpoint", "read one recorded step", "runs_checkpoint"),
+        Route("POST", "/runs/advance", "advance a run within its time budget", "runs_advance"),
+        Route("POST", "/runs/step", "confirm exactly one step", "runs_step"),
+        Route("POST", "/runs/recover", "verify the chain and repair the cursor", "runs_recover"),
+        Route("POST", "/runs/rewind", "roll back to a chosen checkpoint", "runs_rewind"),
+        Route("POST", "/runs/replay", "replay recorded inputs and diff", "runs_replay"),
+        Route("GET", "/runs/compare", "latest replay comparison", "runs_compare"),
+        Route("POST", "/runs/cancel", "abort a simulation run", "runs_cancel"),
     ]
 
 

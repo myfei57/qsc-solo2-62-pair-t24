@@ -20,6 +20,7 @@ from coldstore.valve import OPEN, validate_valve
 
 from . import checks, history, ops
 from . import describe as describe_module
+from . import runs as runs_module
 from . import simulate as simulate_module
 from . import snapshot as snapshot_module
 from . import telemetry as telemetry_module
@@ -681,3 +682,47 @@ def cycle(server: "Server", request: Request) -> Response:
 
 def simulate(server: "Server", request: Request) -> Response:
     return simulate_module.run_simulation(server.runtime, request)
+
+
+def runs_create(server: "Server", request: Request) -> Response:
+    return runs_module.create(server, request)
+
+
+def runs_list(server: "Server", request: Request) -> Response:
+    return runs_module.listing(server, request)
+
+
+def runs_show(server: "Server", request: Request) -> Response:
+    return runs_module.show(server, request)
+
+
+def runs_checkpoint(server: "Server", request: Request) -> Response:
+    return runs_module.checkpoint(server, request)
+
+
+def runs_advance(server: "Server", request: Request) -> Response:
+    return runs_module.advance(server, request)
+
+
+def runs_step(server: "Server", request: Request) -> Response:
+    return runs_module.step(server, request)
+
+
+def runs_recover(server: "Server", request: Request) -> Response:
+    return runs_module.recover(server, request)
+
+
+def runs_rewind(server: "Server", request: Request) -> Response:
+    return runs_module.rewind(server, request)
+
+
+def runs_replay(server: "Server", request: Request) -> Response:
+    return runs_module.replay(server, request)
+
+
+def runs_compare(server: "Server", request: Request) -> Response:
+    return runs_module.compare(server, request)
+
+
+def runs_cancel(server: "Server", request: Request) -> Response:
+    return runs_module.cancel(server, request)
