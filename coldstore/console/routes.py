@@ -127,6 +127,15 @@ def route_table() -> list[Route]:
         Route("GET", "/export/telemetry", "telemetry counters as CSV", "export_telemetry"),
         Route("POST", "/cycle", "run a full control cycle", "cycle"),
         Route("POST", "/simulate", "run deterministic simulation ticks", "simulate"),
+        Route("GET", "/deduce", "list deduction runs", "deduce_list"),
+        Route("POST", "/deduce/start", "start a resumable deduction run", "deduce_start"),
+        Route("POST", "/deduce/advance", "advance a run within its step and time budget", "deduce_advance"),
+        Route("POST", "/deduce/confirm", "confirm the pending step of a manual run", "deduce_confirm"),
+        Route("POST", "/deduce/rewind", "rewind a run to an earlier checkpoint", "deduce_rewind"),
+        Route("POST", "/deduce/abort", "abort a run and keep its journal", "deduce_abort"),
+        Route("POST", "/deduce/status", "run header, counters and pending step", "deduce_status"),
+        Route("POST", "/deduce/steps", "step journal with inputs and basis", "deduce_steps"),
+        Route("POST", "/deduce/replay", "replay recorded inputs and compare results", "deduce_replay"),
     ]
 
 

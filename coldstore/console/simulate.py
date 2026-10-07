@@ -1,12 +1,20 @@
-"""Deterministic simulation ticks."""
+"""Deterministic simulation ticks.
+
+The legacy one-shot endpoint now runs on the resumable deduction engine:
+each call creates a fresh auto-confirmed run, advances it to completion and
+reports the confirmed steps in the historical tick shape. The journal it
+leaves behind is listed by ``GET /deduce`` like any other run.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import time
 
+from coldstore.deduce import AUTO, CONFIRMED, FIXED, RETRY, RunConfig, new_run_id
 from coldstore.ns import control_line
 
+from .deduce import probe
 from .http import Request, Response, json_response
 from .runtime import Runtime
 
@@ -14,6 +22,8 @@ DEFAULT_TICKS = 5
 MAX_TICKS = 100
 START_TEMP = -18.0
 TEMP_STEP = 0.4
+CLOCK_SECONDS = 60
+ADVANCE_ATTEMPTS = 5
 
 
 @dataclass(frozen=True)
@@ -61,7 +71,7 @@ class SimulationReport:
 
 
 def run_simulation(rt: Runtime, request: Request) -> Response:
-    """Run a bounded number of ticks so the console can be exercised offline."""
+    """Run a bounded deduction and report it in the legacy tick shape."""
 
     ticks = request.int_field("ticks", DEFAULT_TICKS)
     if ticks <= 0:
@@ -69,25 +79,46 @@ def run_simulation(rt: Runtime, request: Request) -> Response:
     if ticks > MAX_TICKS:
         ticks = MAX_TICKS
 
-    base_at = int(time.time())
-    steps: list[Tick] = []
-    for index in range(ticks):
-        value = round(START_TEMP + index * TEMP_STEP, 4)
-        rt.temp.record(value, at=base_at + index * 60)
-        entry = rt.load.estimate(value)
-        steps.append(
-            Tick(
-                index=index,
-                temp=value,
-                load=entry.load,
-                high=entry.high,
-                running=rt.compressors.running_count(),
-                total_stage=rt.compressors.total_stage(),
-                defrosting=len(rt.defrost.defrosting()),
-                due=len(rt.scheduler.due(rt.rooms)),
-                latched=rt.ammonia.latched(),
-            )
+    config = RunConfig(
+        run_id=new_run_id("simulate"),
+        steps=ticks,
+        policy=FIXED,
+        step_size=TEMP_STEP,
+        min_step=TEMP_STEP,
+        max_step=TEMP_STEP,
+        start_temp=START_TEMP,
+        target_temp=None,
+        clock_seconds=CLOCK_SECONDS,
+        start_at=int(time.time()),
+        resume=RETRY,
+        confirm=AUTO,
+        advance_cap=MAX_TICKS,
+        advance_seconds=30.0,
+    )
+    engine = rt.deduce
+    engine.start(config)
+    for _ in range(ADVANCE_ATTEMPTS):
+        result = engine.advance(
+            config.run_id, max_steps=ticks, max_seconds=30.0, probe=probe(rt)
         )
+        if result["completed"]:
+            break
+
+    steps = [
+        Tick(
+            index=record.index,
+            temp=float(record.input["temp"]),
+            load=float(record.output["load"]),
+            high=bool(record.output["high"]),
+            running=int(record.context["running"]),
+            total_stage=int(record.context["total_stage"]),
+            defrosting=int(record.context["defrosting"]),
+            due=int(record.context["due"]),
+            latched=bool(record.context["latched"]),
+        )
+        for record in engine.steps(config.run_id)
+        if record.state == CONFIRMED
+    ]
 
     last_stage = control_line().last()
     report = SimulationReport(

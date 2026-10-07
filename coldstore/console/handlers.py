@@ -19,6 +19,7 @@ from coldstore.temp import validate_temp
 from coldstore.valve import OPEN, validate_valve
 
 from . import checks, history, ops
+from . import deduce as deduce_module
 from . import describe as describe_module
 from . import simulate as simulate_module
 from . import snapshot as snapshot_module
@@ -681,3 +682,39 @@ def cycle(server: "Server", request: Request) -> Response:
 
 def simulate(server: "Server", request: Request) -> Response:
     return simulate_module.run_simulation(server.runtime, request)
+
+
+def deduce_start(server: "Server", request: Request) -> Response:
+    return deduce_module.start_run(server.runtime, request)
+
+
+def deduce_advance(server: "Server", request: Request) -> Response:
+    return deduce_module.advance_run(server.runtime, request)
+
+
+def deduce_confirm(server: "Server", request: Request) -> Response:
+    return deduce_module.confirm_step(server.runtime, request)
+
+
+def deduce_rewind(server: "Server", request: Request) -> Response:
+    return deduce_module.rewind_run(server.runtime, request)
+
+
+def deduce_abort(server: "Server", request: Request) -> Response:
+    return deduce_module.abort_run(server.runtime, request)
+
+
+def deduce_list(server: "Server", request: Request) -> Response:
+    return deduce_module.list_runs(server.runtime, request)
+
+
+def deduce_status(server: "Server", request: Request) -> Response:
+    return deduce_module.run_status(server.runtime, request)
+
+
+def deduce_steps(server: "Server", request: Request) -> Response:
+    return deduce_module.run_steps(server.runtime, request)
+
+
+def deduce_replay(server: "Server", request: Request) -> Response:
+    return deduce_module.replay_run(server.runtime, request)
